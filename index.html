@@ -261,7 +261,7 @@
 <script>
 const STRIPE_PUBLIC_KEY = pk_test_51TgYneRzzTEM8WCZBVQC3fp8ZDPsnQjz7wSQoLkYTUbKKPbEr3NZrWgi18pKOAjWsEqtUtrdsC1JH5xro1GZkUr700h4wRgWgL;
 const STRIPE_PRICE_ID = price_1TgZ4NRzzTEM8WCZIzFsiVta;
-const FREE_LIMIT = 1;
+const FREE_LIMIT = 3;
 
 let stripe = Stripe(STRIPE_PUBLIC_KEY);
 let freeUsesLeft = parseInt(localStorage.getItem('freeUses') || FREE_LIMIT);
