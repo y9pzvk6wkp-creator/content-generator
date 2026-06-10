@@ -23,7 +23,6 @@
   .btn-stripe { background: linear-gradient(135deg, #635bff, #4f46e5); color: #fff; font-size: 1.1em; }
   .btn-stripe:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-secondary { background: linear-gradient(135deg, #ec4899, #f43f5e); color: #fff; }
-  .btn-danger { background: #dc2626; color: #fff; margin-top: 8px; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
   .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
   .tab { flex: 1; padding: 12px; text-align: center; border-radius: 10px; border: 1px solid #2d2d4e; background: #1a1a2e; cursor: pointer; font-size: 0.9em; transition: all 0.2s; }
@@ -44,7 +43,6 @@
   .features li { padding: 8px 0; border-bottom: 1px solid #2d2d4e; font-size: 0.95em; display: flex; align-items: center; gap: 10px; }
   .features li:last-child { border-bottom: none; }
   .features .check { color: #10b981; font-size: 1.2em; }
-  .badge-free { display: inline-block; background: #064e3b; color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; margin-bottom: 16px; }
   .divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: #4b5563; font-size: 0.85em; }
   .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #2d2d4e; }
   .trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
@@ -52,14 +50,12 @@
 
   /* STATUS BAR */
   .status-bar { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-  .status-info { display: flex; align-items: center; gap: 10px; }
   .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
   .status-dot.free { background: #f59e0b; }
   .status-text { font-size: 0.9em; }
   .status-badge { font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
   .badge-pro { background: #312e81; color: #a5b4fc; }
   .badge-trial { background: #451a03; color: #fbbf24; }
-  .usage-bar-wrap { margin-top: 6px; }
   .usage-bar { height: 4px; background: #2d2d4e; border-radius: 2px; overflow: hidden; margin-top: 4px; }
   .usage-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 2px; transition: width 0.3s; }
 
@@ -78,14 +74,12 @@
 
   .runway-box { background: #0a1628; border: 1px solid #1e3a5f; border-radius: 12px; padding: 20px; margin-top: 16px; display: none; }
   .runway-box.show { display: block; }
-  .step-list li { padding: 8px 0; border-bottom: 1px solid #1e3a5f; font-size: 0.9em; display: flex; align-items: flex-start; gap: 10px; list-style: none; }
+  .step-list { list-style: none; }
+  .step-list li { padding: 8px 0; border-bottom: 1px solid #1e3a5f; font-size: 0.9em; display: flex; align-items: flex-start; gap: 10px; }
   .step-list li:last-child { border-bottom: none; }
   .step-num { background: #1e40af; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.75em; flex-shrink: 0; margin-top: 1px; }
   .prompt-generated { background: #0f1f0f; border: 1px solid #166534; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 0.9em; color: #86efac; display: none; }
   .prompt-generated.show { display: block; }
-
-  .locked-overlay { position: relative; }
-  .locked-overlay::after { content: '🔒 Réservé aux abonnés Pro'; position: absolute; inset: 0; background: rgba(15,15,26,0.85); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 0.9em; color: #a0a0c0; }
 </style>
 </head>
 <body>
@@ -97,13 +91,13 @@
 
 <div class="container">
 
-  <!-- STATUS BAR (visible si connecté) -->
+  <!-- STATUS BAR -->
   <div class="status-bar" id="status-bar" style="display:none">
-    <div class="status-info">
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="status-dot" id="status-dot"></div>
       <div>
         <div class="status-text" id="status-text">Chargement...</div>
-        <div class="usage-bar-wrap" id="usage-wrap" style="display:none">
+        <div id="usage-wrap" style="display:none">
           <div style="font-size:0.75em;color:#6b7280" id="usage-label"></div>
           <div class="usage-bar"><div class="usage-fill" id="usage-fill" style="width:0%"></div></div>
         </div>
@@ -117,7 +111,7 @@
 
   <!-- PAYWALL -->
   <div id="paywall">
-    <div id="free-trial-banner" class="free-uses">
+    <div class="free-uses">
       <p>Essai gratuit</p>
       <div class="free-count" id="free-count">3</div>
       <p>générations restantes — sans carte bancaire</p>
@@ -135,7 +129,7 @@
         <li><span class="check">✓</span> Accès aux nouvelles fonctionnalités en priorité</li>
         <li><span class="check">✓</span> Support prioritaire</li>
       </ul>
-      <button class="btn btn-stripe" onclick="startCheckout()">
+      <button class="btn btn-stripe" id="checkout-btn" onclick="startCheckout()">
         💳 S'abonner pour 9.99€/mois
       </button>
       <div class="trust-badges">
@@ -149,7 +143,7 @@
     <p style="font-size:0.85em;color:#6b7280">Les <strong id="free-count-2">3</strong> générations gratuites ne nécessitent pas de compte.</p>
   </div>
 
-  <!-- APP (cachée jusqu'à accès autorisé) -->
+  <!-- APP -->
   <div id="app-content" style="display:none">
 
     <div class="card" style="padding:16px">
@@ -179,22 +173,37 @@
           <div class="tag" onclick="this.classList.toggle('selected')">🎵 TikTok</div>
         </div>
         <label>Niche</label>
-        <select id="niche"><option>Lifestyle</option><option>Business / Motivation</option><option>Humour</option><option>Fitness</option><option>Voyage</option><option>Food</option><option>Mode / Beauté</option><option>Tech / IA</option><option>Finance</option></select>
+        <select id="niche">
+          <option>Lifestyle</option><option>Business / Motivation</option><option>Humour</option>
+          <option>Fitness</option><option>Voyage</option><option>Food</option>
+          <option>Mode / Beauté</option><option>Tech / IA</option><option>Finance</option>
+        </select>
         <label>Type de contenu</label>
-        <select id="ctype"><option>Caption + hashtags</option><option>Script pour Reel/TikTok</option><option>Hook viral</option><option>Bio de profil</option><option>Texte pour Story</option><option>Texte pour carrousel</option></select>
+        <select id="ctype">
+          <option>Caption + hashtags</option><option>Script pour Reel/TikTok</option>
+          <option>Hook viral</option><option>Bio de profil</option>
+          <option>Texte pour Story</option><option>Texte pour carrousel</option>
+        </select>
         <label>Ton sujet</label>
         <textarea id="topic" placeholder="Ex: comment gagner de l'argent en dormant..."></textarea>
         <label>Ton</label>
-        <select id="tone"><option>Inspirant / Motivant</option><option>Drôle / Décalé</option><option>Éducatif</option><option>Storytelling</option><option>Direct / Punchy</option></select>
+        <select id="tone">
+          <option>Inspirant / Motivant</option><option>Drôle / Décalé</option>
+          <option>Éducatif</option><option>Storytelling</option><option>Direct / Punchy</option>
+        </select>
         <button class="btn btn-primary" onclick="generateText()">⚡ Générer</button>
         <div class="spinner" id="ts">🤖 Génération en cours...</div>
         <div class="result-box" id="tr"></div>
         <button class="copy-btn" id="tc" style="display:none" onclick="copyText('tr')">📋 Copier</button>
       </div>
+
       <div class="card">
         <h2 style="font-size:1em;margin-bottom:16px">💡 Idées en masse</h2>
         <label>Niche</label>
-        <select id="in2"><option>Lifestyle</option><option>Business</option><option>Fitness</option><option>Voyage</option><option>Finance</option><option>Tech / IA</option></select>
+        <select id="in2">
+          <option>Lifestyle</option><option>Business</option><option>Fitness</option>
+          <option>Voyage</option><option>Finance</option><option>Tech / IA</option>
+        </select>
         <label>Nombre</label>
         <select id="ic"><option>10 idées</option><option>20 idées</option><option>30 idées</option></select>
         <button class="btn btn-primary" onclick="generateIdeas()">💡 Générer des idées</button>
@@ -208,21 +217,43 @@
     <div id="video-section" class="section">
       <div class="card">
         <h2 style="font-size:1em;margin-bottom:12px">🎬 Prompt Vidéo IA</h2>
+        <p style="font-size:0.85em;color:#a0a0c0;margin-bottom:12px">Je génère un prompt optimisé pour Runway ML, puis je t'explique comment créer ta vidéo.</p>
         <div class="video-options">
-          <div class="video-option selected" onclick="selectVid(this,'reel')"><div>📱</div><div style="font-weight:700;font-size:0.85em">Reel/TikTok</div><div style="font-size:0.75em;color:#a0a0c0">Vertical 9:16</div></div>
-          <div class="video-option" onclick="selectVid(this,'cine')"><div>🎥</div><div style="font-weight:700;font-size:0.85em">Cinématique</div><div style="font-size:0.75em;color:#a0a0c0">Style film</div></div>
-          <div class="video-option" onclick="selectVid(this,'product')"><div>🛍️</div><div style="font-weight:700;font-size:0.85em">Produit</div><div style="font-size:0.75em;color:#a0a0c0">Showcase</div></div>
-          <div class="video-option" onclick="selectVid(this,'nature')"><div>🌿</div><div style="font-weight:700;font-size:0.85em">Nature</div><div style="font-size:0.75em;color:#a0a0c0">Ambiance</div></div>
+          <div class="video-option selected" onclick="selectVid(this,'reel')">
+            <div style="font-size:1.5em">📱</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Reel/TikTok</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Vertical 9:16</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'cine')">
+            <div style="font-size:1.5em">🎥</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Cinématique</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Style film</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'product')">
+            <div style="font-size:1.5em">🛍️</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Produit</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Showcase</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'nature')">
+            <div style="font-size:1.5em">🌿</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Nature</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Ambiance</div>
+          </div>
         </div>
         <label>Description</label>
         <textarea id="vdesc" placeholder="Ex: femme marchant à Paris au coucher de soleil..."></textarea>
         <label>Style visuel</label>
-        <select id="vstyle"><option>Cinématique / Film</option><option>Aesthetic / Pastel</option><option>Dark Luxury</option><option>Minimaliste</option><option>Énergique</option><option>Onirique</option></select>
+        <select id="vstyle">
+          <option>Cinématique / Film</option><option>Aesthetic / Pastel</option>
+          <option>Dark Luxury</option><option>Minimaliste</option>
+          <option>Énergique</option><option>Onirique</option>
+        </select>
         <button class="btn btn-secondary" onclick="generateVideoPrompt()">🎬 Générer le prompt</button>
         <div class="spinner" id="vs">🤖 Génération...</div>
         <div class="prompt-generated" id="vpr"></div>
         <button class="copy-btn" id="vpc" style="display:none" onclick="copyText('vpr')">📋 Copier le prompt</button>
       </div>
+
       <div class="runway-box" id="runway-box">
         <h3 style="color:#60a5fa;margin-bottom:12px">🚀 Comment créer ta vidéo sur Runway ML</h3>
         <ul class="step-list">
@@ -242,11 +273,20 @@
       <div class="card">
         <h2 style="font-size:1em;margin-bottom:16px">📊 Stratégie personnalisée</h2>
         <label>Niche</label>
-        <select id="sn"><option>Lifestyle</option><option>Business</option><option>Fitness</option><option>Voyage</option><option>Food</option><option>Finance</option><option>Tech / IA</option></select>
+        <select id="sn">
+          <option>Lifestyle</option><option>Business</option><option>Fitness</option>
+          <option>Voyage</option><option>Food</option><option>Finance</option><option>Tech / IA</option>
+        </select>
         <label>Objectif</label>
-        <select id="sg"><option>Gagner des abonnés</option><option>Maximiser l'engagement</option><option>Monétiser</option><option>Marque personnelle</option></select>
+        <select id="sg">
+          <option>Gagner des abonnés</option><option>Maximiser l'engagement</option>
+          <option>Monétiser</option><option>Marque personnelle</option>
+        </select>
         <label>Abonnés actuels</label>
-        <select id="sl"><option>0 — je débute</option><option>Moins de 1 000</option><option>1 000 — 10 000</option><option>10 000 — 50 000</option><option>Plus de 50 000</option></select>
+        <select id="sl">
+          <option>0 — je débute</option><option>Moins de 1 000</option>
+          <option>1 000 — 10 000</option><option>10 000 — 50 000</option><option>Plus de 50 000</option>
+        </select>
         <button class="btn btn-primary" onclick="generateStrategy()">📊 Générer ma stratégie</button>
         <div class="spinner" id="ss">🤖 Analyse en cours...</div>
         <div class="result-box" id="sr"></div>
@@ -259,12 +299,12 @@
 </div><!-- /container -->
 
 <script>
-const STRIPE_PUBLIC_KEY = pk_test_51TgYneRzzTEM8WCZBVQC3fp8ZDPsnQjz7wSQoLkYTUbKKPbEr3NZrWgi18pKOAjWsEqtUtrdsC1JH5xro1GZkUr700h4wRgWgL;
-const STRIPE_PRICE_ID = price_1TgZ4NRzzTEM8WCZIzFsiVta;
+const STRIPE_PUBLIC_KEY = 'pk_test_51TgYneRzzTEM8WCZBVQC3fp8ZDPsnQjz7wSQoLkYTUbKKPbEr3NZrWgi18pKOAjWsEqtUtrdsC1JH5xro1GZkUr700h4wRgWgL';
+const STRIPE_PRICE_ID   = 'price_1TgZ4NRzzTEM8WCZIzFsiVta';
 const FREE_LIMIT = 3;
 
-let stripe = Stripe(STRIPE_PUBLIC_KEY);
-let freeUsesLeft = parseInt(localStorage.getItem('freeUses') || FREE_LIMIT);
+const stripe = Stripe(STRIPE_PUBLIC_KEY);
+let freeUsesLeft = parseInt(localStorage.getItem('freeUses') ?? FREE_LIMIT);
 let isPro = localStorage.getItem('isPro') === 'true';
 let selectedVidType = 'reel';
 
@@ -280,15 +320,15 @@ function init() {
 }
 
 function checkUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('success') === 'true') {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('success') === 'true') {
     localStorage.setItem('isPro', 'true');
     isPro = true;
     window.history.replaceState({}, '', window.location.pathname);
     showApp('pro');
     alert('🎉 Bienvenue sur ContentAI Pro ! Ton abonnement est actif.');
   }
-  if (params.get('canceled') === 'true') {
+  if (p.get('canceled') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
     alert('Paiement annulé. Tu peux réessayer quand tu veux !');
   }
@@ -302,8 +342,8 @@ function showPaywall() {
 function showApp(mode) {
   document.getElementById('app-content').style.display = 'block';
   document.getElementById('status-bar').style.display = 'flex';
-  const dot = document.getElementById('status-dot');
-  const text = document.getElementById('status-text');
+  const dot   = document.getElementById('status-dot');
+  const text  = document.getElementById('status-text');
   const badge = document.getElementById('plan-badge');
   if (mode === 'pro') {
     document.getElementById('paywall').style.display = 'none';
@@ -313,7 +353,7 @@ function showApp(mode) {
     badge.textContent = 'PRO';
     document.getElementById('usage-wrap').style.display = 'none';
   } else {
-    dot.style.background = '#f59e0b';
+    dot.classList.add('free');
     text.textContent = `Essai gratuit — ${freeUsesLeft} génération(s) restante(s)`;
     badge.className = 'status-badge badge-trial';
     badge.textContent = 'GRATUIT';
@@ -325,7 +365,7 @@ function showApp(mode) {
 }
 
 function updateFreeCount() {
-  document.getElementById('free-count').textContent = freeUsesLeft;
+  document.getElementById('free-count').textContent   = freeUsesLeft;
   document.getElementById('free-count-2').textContent = freeUsesLeft;
 }
 
@@ -344,7 +384,7 @@ function consumeFreeUse() {
 }
 
 async function startCheckout() {
-  const btn = document.querySelector('.btn-stripe');
+  const btn = document.getElementById('checkout-btn');
   btn.textContent = '⏳ Redirection vers Stripe...';
   btn.disabled = true;
   try {
@@ -352,14 +392,25 @@ async function startCheckout() {
       lineItems: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
       mode: 'subscription',
       successUrl: window.location.origin + window.location.pathname + '?success=true',
-      cancelUrl: window.location.origin + window.location.pathname + '?canceled=true',
+      cancelUrl:  window.location.origin + window.location.pathname + '?canceled=true',
     });
-    if (error) { alert('Erreur : ' + error.message); btn.textContent = '💳 S\'abonner pour 9.99€/mois'; btn.disabled = false; }
-  } catch(e) { alert('Erreur de paiement.'); btn.textContent = '💳 S\'abonner pour 9.99€/mois'; btn.disabled = false; }
+    if (error) {
+      alert('Erreur : ' + error.message);
+      btn.textContent = '💳 S\'abonner pour 9.99€/mois';
+      btn.disabled = false;
+    }
+  } catch(e) {
+    alert('Erreur de paiement. Réessaie.');
+    btn.textContent = '💳 S\'abonner pour 9.99€/mois';
+    btn.disabled = false;
+  }
 }
 
 function logout() {
-  if (confirm('Se déconnecter ?')) { localStorage.removeItem('isPro'); location.reload(); }
+  if (confirm('Se déconnecter ?')) {
+    localStorage.removeItem('isPro');
+    location.reload();
+  }
 }
 
 function checkApiKey() {
@@ -372,62 +423,90 @@ async function callClaude(prompt) {
   if (!k) { alert('Entre ta clé API Anthropic !'); return null; }
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': k,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
   });
   if (!r.ok) { alert('Erreur API — vérifie ta clé.'); return null; }
-  const d = await r.json(); return d.content[0].text;
+  const d = await r.json();
+  return d.content[0].text;
 }
 
 function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['text','video','strategy'][i] === tab));
+  document.querySelectorAll('.tab').forEach((t, i) =>
+    t.classList.toggle('active', ['text','video','strategy'][i] === tab)
+  );
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById(tab + '-section').classList.add('active');
 }
 
 function selectVid(el, type) {
   document.querySelectorAll('.video-option').forEach(v => v.classList.remove('selected'));
-  el.classList.add('selected'); selectedVidType = type;
+  el.classList.add('selected');
+  selectedVidType = type;
 }
 
 async function generateText() {
   if (!consumeFreeUse()) return;
   const platforms = [...document.querySelectorAll('.tag.selected')].map(t => t.textContent).join(' et ');
-  const prompt = `Expert réseaux sociaux. Génère un ${document.getElementById('ctype').value} pour ${platforms||'Instagram'} niche ${document.getElementById('niche').value}. Sujet: ${document.getElementById('topic').value||'au choix'}. Ton: ${document.getElementById('tone').value}. Inclus hashtags si Instagram, hook percutant si TikTok.`;
-  showResult('ts', 'tr', 'tc', await runSpinner('ts', prompt));
+  const prompt = `Tu es expert en contenu pour réseaux sociaux. Génère un ${document.getElementById('ctype').value} pour ${platforms || 'Instagram'} dans la niche ${document.getElementById('niche').value}.\nSujet: ${document.getElementById('topic').value || 'au choix dans la niche'}\nTon: ${document.getElementById('tone').value}\nInclus hashtags optimisés si Instagram. Hook percutant si TikTok. Sois créatif et engageant.`;
+  await runAndShow('ts', 'tr', 'tc', prompt);
 }
 
 async function generateIdeas() {
   if (!consumeFreeUse()) return;
-  const prompt = `Génère ${document.getElementById('ic').value} idées posts viraux Instagram/TikTok niche ${document.getElementById('in2').value}. Format numéroté: titre, type, pourquoi ça cartonne.`;
-  showResult('is', 'ir', 'irc', await runSpinner('is', prompt));
+  const prompt = `Génère ${document.getElementById('ic').value} idées de posts viraux pour Instagram et TikTok dans la niche ${document.getElementById('in2').value}. Format numéroté : titre, type de contenu, pourquoi ça va cartonner. Sois concret et créatif.`;
+  await runAndShow('is', 'ir', 'irc', prompt);
 }
 
 async function generateVideoPrompt() {
   if (!consumeFreeUse()) return;
-  const prompt = `Expert Runway ML. Génère prompt vidéo optimisé en anglais pour vidéo "${selectedVidType}" style ${document.getElementById('vstyle').value}. Description: ${document.getElementById('vdesc').value||'vidéo esthétique réseaux sociaux'}. Inclure scène, éclairage, mouvements caméra, atmosphère. Max 150 mots. UNIQUEMENT le prompt.`;
-  const txt = await runSpinner('vs', prompt);
-  if (txt) { document.getElementById('vpr').textContent = txt; document.getElementById('vpr').classList.add('show'); document.getElementById('vpc').style.display = 'inline-block'; document.getElementById('runway-box').classList.add('show'); }
+  const prompt = `Tu es expert en génération vidéo IA Runway ML. Génère un prompt optimisé en anglais pour une vidéo "${selectedVidType}" style ${document.getElementById('vstyle').value}.\nDescription: ${document.getElementById('vdesc').value || 'vidéo esthétique engageante pour réseaux sociaux'}\nInclure: scène, éclairage, mouvements caméra, atmosphère, style cinématique. Max 150 mots. Réponds UNIQUEMENT avec le prompt.`;
+  document.getElementById('vs').classList.add('show');
+  document.getElementById('vpr').classList.remove('show');
+  document.getElementById('vpc').style.display = 'none';
+  document.getElementById('runway-box').classList.remove('show');
+  const txt = await callClaude(prompt);
+  document.getElementById('vs').classList.remove('show');
+  if (txt) {
+    document.getElementById('vpr').textContent = txt;
+    document.getElementById('vpr').classList.add('show');
+    document.getElementById('vpc').style.display = 'inline-block';
+    document.getElementById('runway-box').classList.add('show');
+  }
 }
 
 async function generateStrategy() {
   if (!consumeFreeUse()) return;
-  const prompt = `Expert growth hacking Instagram/TikTok. Stratégie pour niche ${document.getElementById('sn').value}, objectif: ${document.getElementById('sg').value}, niveau: ${document.getElementById('sl').value}. Inclure: fréquence, types de posts, horaires, 5 idées virales, hashtags, plan 30 jours. Très concret.`;
-  showResult('ss', 'sr', 'sc', await runSpinner('ss', prompt));
+  const prompt = `Tu es expert en growth hacking Instagram et TikTok. Crée une stratégie de contenu détaillée pour quelqu'un dans la niche ${document.getElementById('sn').value} avec l'objectif : ${document.getElementById('sg').value}, niveau actuel : ${document.getElementById('sl').value}.\nInclus : 1) Fréquence de publication 2) Types de contenus (%) 3) Meilleurs horaires 4) 5 idées virales spécifiques 5) Stratégie hashtags 6) Plan d'action 30 jours. Très concret et actionnable.`;
+  await runAndShow('ss', 'sr', 'sc', prompt);
 }
 
-async function runSpinner(spinnerId, prompt) {
+async function runAndShow(spinnerId, resultId, btnId, prompt) {
   document.getElementById(spinnerId).classList.add('show');
+  document.getElementById(resultId).classList.remove('show');
+  document.getElementById(btnId).style.display = 'none';
   const txt = await callClaude(prompt);
   document.getElementById(spinnerId).classList.remove('show');
-  return txt;
+  if (txt) {
+    document.getElementById(resultId).textContent = txt;
+    document.getElementById(resultId).classList.add('show');
+    document.getElementById(btnId).style.display = 'inline-block';
+  }
 }
 
-function showResult(sid, rid, bid, txt) {
-  if (txt) { document.getElementById(rid).textContent = txt; document.getElementById(rid).classList.add('show'); document.getElementById(bid).style.display = 'inline-block'; }
+function copyText(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent)
+    .then(() => alert('✅ Copié !'));
 }
-
-function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => alert('✅ Copié !')); }
 
 init();
 </script>
