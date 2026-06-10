@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ContentAI — Générateur Instagram & TikTok</title>
-<script src="https://js.stripe.com/v3/"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; min-height: 100vh; }
@@ -14,8 +13,8 @@
   .container { max-width: 800px; margin: 0 auto; padding: 20px; }
   .card { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
   label { display: block; font-size: 0.85em; color: #a0a0c0; margin-bottom: 6px; margin-top: 14px; }
-  select, textarea, input { width: 100%; background: #0f0f1a; border: 1px solid #3d3d5e; border-radius: 10px; padding: 12px; color: #fff; font-size: 0.95em; outline: none; font-family: inherit; }
-  select:focus, textarea:focus, input:focus { border-color: #6366f1; }
+  select, textarea { width: 100%; background: #0f0f1a; border: 1px solid #3d3d5e; border-radius: 10px; padding: 12px; color: #fff; font-size: 0.95em; outline: none; font-family: inherit; }
+  select:focus, textarea:focus { border-color: #6366f1; }
   textarea { resize: vertical; min-height: 80px; }
   .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1em; font-weight: 700; cursor: pointer; margin-top: 16px; transition: all 0.2s; font-family: inherit; }
   .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
@@ -23,6 +22,7 @@
   .btn-stripe { background: linear-gradient(135deg, #635bff, #4f46e5); color: #fff; font-size: 1.1em; }
   .btn-stripe:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-secondary { background: linear-gradient(135deg, #ec4899, #f43f5e); color: #fff; }
+  .btn-danger { background: #1a1a2e; border: 1px solid #dc2626; color: #f87171; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
   .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
   .tab { flex: 1; padding: 12px; text-align: center; border-radius: 10px; border: 1px solid #2d2d4e; background: #1a1a2e; cursor: pointer; font-size: 0.9em; transition: all 0.2s; }
@@ -35,7 +35,7 @@
   .spinner.show { display: block; }
 
   /* PAYWALL */
-  #paywall { text-align: center; padding: 20px 0; }
+  #paywall { display: none; text-align: center; padding: 20px 0; }
   .price-box { background: linear-gradient(135deg, #1a1a2e, #2d2d4e); border: 2px solid #6366f1; border-radius: 20px; padding: 32px 24px; margin-bottom: 20px; }
   .price-amount { font-size: 3em; font-weight: 900; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   .price-period { font-size: 1em; color: #a0a0c0; margin-top: 4px; }
@@ -50,7 +50,7 @@
 
   /* STATUS BAR */
   .status-bar { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
-  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
   .status-dot.free { background: #f59e0b; }
   .status-text { font-size: 0.9em; }
   .status-badge { font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
@@ -59,7 +59,7 @@
   .usage-bar { height: 4px; background: #2d2d4e; border-radius: 2px; overflow: hidden; margin-top: 4px; }
   .usage-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 2px; transition: width 0.3s; }
 
-  /* FREE TRIAL */
+  /* FREE TRIAL COUNTER */
   .free-uses { text-align: center; background: #0a1628; border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
   .free-uses p { font-size: 0.85em; color: #60a5fa; }
   .free-count { font-size: 1.8em; font-weight: 900; color: #fff; }
@@ -80,6 +80,8 @@
   .step-num { background: #1e40af; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.75em; flex-shrink: 0; margin-top: 1px; }
   .prompt-generated { background: #0f1f0f; border: 1px solid #166534; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 0.9em; color: #86efac; display: none; }
   .prompt-generated.show { display: block; }
+
+  .loading-init { text-align: center; padding: 60px 20px; color: #6b7280; }
 </style>
 </head>
 <body>
@@ -91,27 +93,33 @@
 
 <div class="container">
 
-  <!-- STATUS BAR -->
+  <!-- LOADING INITIAL -->
+  <div class="loading-init" id="loading-init">
+    <div style="font-size:2em;margin-bottom:10px">⏳</div>
+    <div>Chargement...</div>
+  </div>
+
+  <!-- STATUS BAR (visible une fois connecté) -->
   <div class="status-bar" id="status-bar" style="display:none">
     <div style="display:flex;align-items:center;gap:10px">
       <div class="status-dot" id="status-dot"></div>
       <div>
-        <div class="status-text" id="status-text">Chargement...</div>
+        <div class="status-text" id="status-text"></div>
         <div id="usage-wrap" style="display:none">
           <div style="font-size:0.75em;color:#6b7280" id="usage-label"></div>
           <div class="usage-bar"><div class="usage-fill" id="usage-fill" style="width:0%"></div></div>
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
       <span class="status-badge badge-pro" id="plan-badge">PRO</span>
-      <button style="background:none;border:1px solid #3d3d5e;color:#a0a0c0;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:0.8em" onclick="logout()">Déconnexion</button>
+      <button id="cancel-btn" class="btn-danger" style="display:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.8em;background:#1a1a2e;border:1px solid #dc2626;color:#f87171" onclick="cancelSubscription()">Résilier</button>
     </div>
   </div>
 
   <!-- PAYWALL -->
   <div id="paywall">
-    <div class="free-uses">
+    <div class="free-uses" id="trial-counter">
       <p>Essai gratuit</p>
       <div class="free-count" id="free-count">3</div>
       <p>générations restantes — sans carte bancaire</p>
@@ -125,8 +133,8 @@
         <li><span class="check">✓</span> Générations de textes illimitées</li>
         <li><span class="check">✓</span> Prompts vidéo IA illimités</li>
         <li><span class="check">✓</span> Stratégies personnalisées illimitées</li>
-        <li><span class="check">✓</span> Tous les types de contenu (scripts, hooks, bio...)</li>
-        <li><span class="check">✓</span> Accès aux nouvelles fonctionnalités en priorité</li>
+        <li><span class="check">✓</span> Tous les types de contenu</li>
+        <li><span class="check">✓</span> Accès prioritaire aux nouvelles fonctionnalités</li>
         <li><span class="check">✓</span> Support prioritaire</li>
       </ul>
       <button class="btn btn-stripe" id="checkout-btn" onclick="startCheckout()">
@@ -139,23 +147,12 @@
       </div>
     </div>
 
-    <div class="divider">ou continuer avec l'essai gratuit</div>
-    <p style="font-size:0.85em;color:#6b7280">Les <strong id="free-count-2">3</strong> générations gratuites ne nécessitent pas de compte.</p>
+    <div class="divider">ou continue avec l'essai gratuit</div>
+    <p style="font-size:0.85em;color:#6b7280"><strong id="free-count-2">3</strong> générations gratuites disponibles sans compte.</p>
   </div>
 
-  <!-- APP -->
+  <!-- APP (accessible free + pro) -->
   <div id="app-content" style="display:none">
-
-    <div class="card" style="padding:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:0.85em;color:#a0a0c0">Clé API Anthropic</div>
-          <div style="font-size:0.75em;color:#6b7280;margin-top:2px">Obtiens ta clé sur console.anthropic.com</div>
-        </div>
-        <div id="api-indicator" style="width:10px;height:10px;border-radius:50%;background:#dc2626"></div>
-      </div>
-      <input type="password" id="apiKey" placeholder="sk-ant-..." style="margin-top:10px" oninput="checkApiKey()" />
-    </div>
 
     <div class="tabs">
       <div class="tab active" onclick="switchTab('text')">✍️ Textes</div>
@@ -299,34 +296,42 @@
 </div><!-- /container -->
 
 <script>
-const STRIPE_PUBLIC_KEY = 'pk_test_51TgYneRzzTEM8WCZBVQC3fp8ZDPsnQjz7wSQoLkYTUbKKPbEr3NZrWgi18pKOAjWsEqtUtrdsC1JH5xro1GZkUr700h4wRgWgL';
-const STRIPE_PRICE_ID   = 'price_1TgZ4NRzzTEM8WCZIzFsiVta';
-const FREE_LIMIT = 3;
+// ─── Config ──────────────────────────────────────────────────────────────────
+const API = ''; // Vide = même origine. En dev mets 'http://localhost:3000'
 
-const stripe = Stripe(STRIPE_PUBLIC_KEY);
-let freeUsesLeft = parseInt(localStorage.getItem('freeUses') ?? FREE_LIMIT);
-let isPro = localStorage.getItem('isPro') === 'true';
-let selectedVidType = 'reel';
-
-function init() {
-  updateFreeCount();
-  if (isPro) {
-    showApp('pro');
-  } else {
-    showPaywall();
-    if (freeUsesLeft > 0) showApp('trial');
-  }
-  checkUrlParams();
+// ─── Session (persistée dans localStorage pour ne pas perdre le statut Pro) ──
+let sessionId = localStorage.getItem('sessionId');
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  localStorage.setItem('sessionId', sessionId);
 }
 
-function checkUrlParams() {
+let state = { isPro: false, freeUsesLeft: 3, freeLimit: 3 };
+let selectedVidType = 'reel';
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  await checkUrlParams();
+  await fetchStatus();
+  renderUI();
+  document.getElementById('loading-init').style.display = 'none';
+}
+
+async function fetchStatus() {
+  try {
+    const r = await apiFetch('/api/status');
+    if (r) state = r;
+  } catch (_) {}
+}
+
+async function checkUrlParams() {
   const p = new URLSearchParams(window.location.search);
   if (p.get('success') === 'true') {
-    localStorage.setItem('isPro', 'true');
-    isPro = true;
     window.history.replaceState({}, '', window.location.pathname);
-    showApp('pro');
-    alert('🎉 Bienvenue sur ContentAI Pro ! Ton abonnement est actif.');
+    // Statut mis à jour via webhook côté serveur, on attend un peu
+    await new Promise(r => setTimeout(r, 1500));
+    await fetchStatus();
+    if (state.isPro) alert('🎉 Bienvenue sur ContentAI Pro ! Ton abonnement est actif.');
   }
   if (p.get('canceled') === 'true') {
     window.history.replaceState({}, '', window.location.pathname);
@@ -334,112 +339,154 @@ function checkUrlParams() {
   }
 }
 
-function showPaywall() {
-  document.getElementById('paywall').style.display = 'block';
-  document.getElementById('status-bar').style.display = 'none';
-}
-
-function showApp(mode) {
-  document.getElementById('app-content').style.display = 'block';
-  document.getElementById('status-bar').style.display = 'flex';
-  const dot   = document.getElementById('status-dot');
-  const text  = document.getElementById('status-text');
-  const badge = document.getElementById('plan-badge');
-  if (mode === 'pro') {
+function renderUI() {
+  if (state.isPro) {
     document.getElementById('paywall').style.display = 'none';
-    dot.style.background = '#10b981';
-    text.textContent = 'Abonné Pro — accès illimité';
-    badge.className = 'status-badge badge-pro';
-    badge.textContent = 'PRO';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'flex';
+    document.getElementById('status-dot').style.background = '#10b981';
+    document.getElementById('status-text').textContent = 'Abonné Pro — accès illimité';
+    document.getElementById('plan-badge').className = 'status-badge badge-pro';
+    document.getElementById('plan-badge').textContent = 'PRO';
     document.getElementById('usage-wrap').style.display = 'none';
-  } else {
-    dot.classList.add('free');
-    text.textContent = `Essai gratuit — ${freeUsesLeft} génération(s) restante(s)`;
-    badge.className = 'status-badge badge-trial';
-    badge.textContent = 'GRATUIT';
-    const pct = ((FREE_LIMIT - freeUsesLeft) / FREE_LIMIT) * 100;
+    document.getElementById('cancel-btn').style.display = 'inline-block';
+  } else if (state.freeUsesLeft > 0) {
+    // Essai gratuit avec générations restantes
+    document.getElementById('paywall').style.display = 'block';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'flex';
+    document.getElementById('status-dot').className = 'status-dot free';
+    document.getElementById('status-text').textContent = `Essai gratuit — ${state.freeUsesLeft} génération(s) restante(s)`;
+    document.getElementById('plan-badge').className = 'status-badge badge-trial';
+    document.getElementById('plan-badge').textContent = 'GRATUIT';
+    const pct = ((state.freeLimit - state.freeUsesLeft) / state.freeLimit) * 100;
     document.getElementById('usage-wrap').style.display = 'block';
-    document.getElementById('usage-label').textContent = `${FREE_LIMIT - freeUsesLeft}/${FREE_LIMIT} utilisées`;
+    document.getElementById('usage-label').textContent = `${state.freeLimit - state.freeUsesLeft}/${state.freeLimit} utilisées`;
     document.getElementById('usage-fill').style.width = pct + '%';
+    document.getElementById('free-count').textContent = state.freeUsesLeft;
+    document.getElementById('free-count-2').textContent = state.freeUsesLeft;
+  } else {
+    // Plus de générations → paywall uniquement
+    document.getElementById('paywall').style.display = 'block';
+    document.getElementById('app-content').style.display = 'none';
+    document.getElementById('status-bar').style.display = 'none';
+    document.getElementById('trial-counter').style.display = 'none';
   }
 }
 
-function updateFreeCount() {
-  document.getElementById('free-count').textContent   = freeUsesLeft;
-  document.getElementById('free-count-2').textContent = freeUsesLeft;
+// ─── API helper ──────────────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-session-id': sessionId,
+      ...(options.headers ?? {}),
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return data;
 }
 
-function consumeFreeUse() {
-  if (isPro) return true;
-  if (freeUsesLeft <= 0) {
-    alert('Tu as utilisé tes 3 générations gratuites ! Abonne-toi pour continuer.');
-    document.getElementById('paywall').scrollIntoView({ behavior: 'smooth' });
-    return false;
+// ─── Génération ──────────────────────────────────────────────────────────────
+async function generate(prompt) {
+  try {
+    const data = await apiFetch('/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
+    });
+    // Mettre à jour le compteur après chaque appel
+    state.freeUsesLeft = data.freeUsesLeft;
+    state.isPro        = data.isPro;
+    renderUI();
+    return data.text;
+  } catch (err) {
+    if (err.error === 'LIMIT_REACHED') {
+      alert('Tu as utilisé tes générations gratuites ! Abonne-toi pour continuer.');
+      document.getElementById('paywall').scrollIntoView({ behavior: 'smooth' });
+    } else {
+      alert(err.error ?? 'Erreur — réessaie.');
+    }
+    return null;
   }
-  freeUsesLeft--;
-  localStorage.setItem('freeUses', freeUsesLeft);
-  updateFreeCount();
-  showApp('trial');
-  return true;
 }
 
+// ─── Checkout ────────────────────────────────────────────────────────────────
 async function startCheckout() {
   const btn = document.getElementById('checkout-btn');
   btn.textContent = '⏳ Redirection vers Stripe...';
   btn.disabled = true;
   try {
-    const { error } = await stripe.redirectToCheckout({
-      lineItems: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
-      mode: 'subscription',
-      successUrl: window.location.origin + window.location.pathname + '?success=true',
-      cancelUrl:  window.location.origin + window.location.pathname + '?canceled=true',
-    });
-    if (error) {
-      alert('Erreur : ' + error.message);
-      btn.textContent = '💳 S\'abonner pour 9.99€/mois';
-      btn.disabled = false;
-    }
-  } catch(e) {
-    alert('Erreur de paiement. Réessaie.');
+    const data = await apiFetch('/api/checkout', { method: 'POST' });
+    window.location.href = data.url;
+  } catch (_) {
+    alert('Erreur paiement. Réessaie.');
     btn.textContent = '💳 S\'abonner pour 9.99€/mois';
     btn.disabled = false;
   }
 }
 
-function logout() {
-  if (confirm('Se déconnecter ?')) {
-    localStorage.removeItem('isPro');
-    location.reload();
+async function cancelSubscription() {
+  if (!confirm('Résilier ton abonnement Pro ? Tu garderas l\'accès jusqu\'à la fin de la période.')) return;
+  try {
+    await apiFetch('/api/cancel', { method: 'POST' });
+    alert('Abonnement résilié. Merci d\'avoir utilisé ContentAI !');
+    state.isPro = false;
+    await fetchStatus();
+    renderUI();
+  } catch (err) {
+    alert(err.error ?? 'Erreur annulation.');
   }
 }
 
-function checkApiKey() {
-  const k = document.getElementById('apiKey').value.trim();
-  document.getElementById('api-indicator').style.background = k.startsWith('sk-ant-') ? '#10b981' : '#dc2626';
+// ─── Générateurs de contenu ──────────────────────────────────────────────────
+async function generateText() {
+  const platforms = [...document.querySelectorAll('.tag.selected')].map(t => t.textContent).join(' et ');
+  const prompt = `Tu es expert en contenu pour réseaux sociaux. Génère un ${document.getElementById('ctype').value} pour ${platforms || 'Instagram'} dans la niche ${document.getElementById('niche').value}.\nSujet: ${document.getElementById('topic').value || 'au choix dans la niche'}\nTon: ${document.getElementById('tone').value}\nInclus hashtags optimisés si Instagram. Hook percutant si TikTok. Sois créatif et engageant.`;
+  await runAndShow('ts', 'tr', 'tc', prompt);
 }
 
-async function callClaude(prompt) {
-  const k = document.getElementById('apiKey').value.trim();
-  if (!k) { alert('Entre ta clé API Anthropic !'); return null; }
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': k,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!r.ok) { alert('Erreur API — vérifie ta clé.'); return null; }
-  const d = await r.json();
-  return d.content[0].text;
+async function generateIdeas() {
+  const prompt = `Génère ${document.getElementById('ic').value} idées de posts viraux pour Instagram et TikTok dans la niche ${document.getElementById('in2').value}. Format numéroté : titre, type de contenu, pourquoi ça va cartonner. Sois concret et créatif.`;
+  await runAndShow('is', 'ir', 'irc', prompt);
 }
 
+async function generateVideoPrompt() {
+  const prompt = `Tu es expert en génération vidéo IA Runway ML. Génère un prompt optimisé en anglais pour une vidéo "${selectedVidType}" style ${document.getElementById('vstyle').value}.\nDescription: ${document.getElementById('vdesc').value || 'vidéo esthétique engageante pour réseaux sociaux'}\nInclure: scène, éclairage, mouvements caméra, atmosphère, style cinématique. Max 150 mots. Réponds UNIQUEMENT avec le prompt.`;
+  document.getElementById('vs').classList.add('show');
+  document.getElementById('vpr').classList.remove('show');
+  document.getElementById('vpc').style.display = 'none';
+  document.getElementById('runway-box').classList.remove('show');
+  const txt = await generate(prompt);
+  document.getElementById('vs').classList.remove('show');
+  if (txt) {
+    document.getElementById('vpr').textContent = txt;
+    document.getElementById('vpr').classList.add('show');
+    document.getElementById('vpc').style.display = 'inline-block';
+    document.getElementById('runway-box').classList.add('show');
+  }
+}
+
+async function generateStrategy() {
+  const prompt = `Tu es expert en growth hacking Instagram et TikTok. Crée une stratégie de contenu détaillée pour quelqu'un dans la niche ${document.getElementById('sn').value} avec l'objectif : ${document.getElementById('sg').value}, niveau actuel : ${document.getElementById('sl').value}.\nInclus : 1) Fréquence de publication 2) Types de contenus (%) 3) Meilleurs horaires 4) 5 idées virales spécifiques 5) Stratégie hashtags 6) Plan d'action 30 jours. Très concret et actionnable.`;
+  await runAndShow('ss', 'sr', 'sc', prompt);
+}
+
+async function runAndShow(spinnerId, resultId, btnId, prompt) {
+  document.getElementById(spinnerId).classList.add('show');
+  document.getElementById(resultId).classList.remove('show');
+  document.getElementById(btnId).style.display = 'none';
+  const txt = await generate(prompt);
+  document.getElementById(spinnerId).classList.remove('show');
+  if (txt) {
+    document.getElementById(resultId).textContent = txt;
+    document.getElementById(resultId).classList.add('show');
+    document.getElementById(btnId).style.display = 'inline-block';
+  }
+}
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach((t, i) =>
     t.classList.toggle('active', ['text','video','strategy'][i] === tab)
@@ -452,55 +499,6 @@ function selectVid(el, type) {
   document.querySelectorAll('.video-option').forEach(v => v.classList.remove('selected'));
   el.classList.add('selected');
   selectedVidType = type;
-}
-
-async function generateText() {
-  if (!consumeFreeUse()) return;
-  const platforms = [...document.querySelectorAll('.tag.selected')].map(t => t.textContent).join(' et ');
-  const prompt = `Tu es expert en contenu pour réseaux sociaux. Génère un ${document.getElementById('ctype').value} pour ${platforms || 'Instagram'} dans la niche ${document.getElementById('niche').value}.\nSujet: ${document.getElementById('topic').value || 'au choix dans la niche'}\nTon: ${document.getElementById('tone').value}\nInclus hashtags optimisés si Instagram. Hook percutant si TikTok. Sois créatif et engageant.`;
-  await runAndShow('ts', 'tr', 'tc', prompt);
-}
-
-async function generateIdeas() {
-  if (!consumeFreeUse()) return;
-  const prompt = `Génère ${document.getElementById('ic').value} idées de posts viraux pour Instagram et TikTok dans la niche ${document.getElementById('in2').value}. Format numéroté : titre, type de contenu, pourquoi ça va cartonner. Sois concret et créatif.`;
-  await runAndShow('is', 'ir', 'irc', prompt);
-}
-
-async function generateVideoPrompt() {
-  if (!consumeFreeUse()) return;
-  const prompt = `Tu es expert en génération vidéo IA Runway ML. Génère un prompt optimisé en anglais pour une vidéo "${selectedVidType}" style ${document.getElementById('vstyle').value}.\nDescription: ${document.getElementById('vdesc').value || 'vidéo esthétique engageante pour réseaux sociaux'}\nInclure: scène, éclairage, mouvements caméra, atmosphère, style cinématique. Max 150 mots. Réponds UNIQUEMENT avec le prompt.`;
-  document.getElementById('vs').classList.add('show');
-  document.getElementById('vpr').classList.remove('show');
-  document.getElementById('vpc').style.display = 'none';
-  document.getElementById('runway-box').classList.remove('show');
-  const txt = await callClaude(prompt);
-  document.getElementById('vs').classList.remove('show');
-  if (txt) {
-    document.getElementById('vpr').textContent = txt;
-    document.getElementById('vpr').classList.add('show');
-    document.getElementById('vpc').style.display = 'inline-block';
-    document.getElementById('runway-box').classList.add('show');
-  }
-}
-
-async function generateStrategy() {
-  if (!consumeFreeUse()) return;
-  const prompt = `Tu es expert en growth hacking Instagram et TikTok. Crée une stratégie de contenu détaillée pour quelqu'un dans la niche ${document.getElementById('sn').value} avec l'objectif : ${document.getElementById('sg').value}, niveau actuel : ${document.getElementById('sl').value}.\nInclus : 1) Fréquence de publication 2) Types de contenus (%) 3) Meilleurs horaires 4) 5 idées virales spécifiques 5) Stratégie hashtags 6) Plan d'action 30 jours. Très concret et actionnable.`;
-  await runAndShow('ss', 'sr', 'sc', prompt);
-}
-
-async function runAndShow(spinnerId, resultId, btnId, prompt) {
-  document.getElementById(spinnerId).classList.add('show');
-  document.getElementById(resultId).classList.remove('show');
-  document.getElementById(btnId).style.display = 'none';
-  const txt = await callClaude(prompt);
-  document.getElementById(spinnerId).classList.remove('show');
-  if (txt) {
-    document.getElementById(resultId).textContent = txt;
-    document.getElementById(resultId).classList.add('show');
-    document.getElementById(btnId).style.display = 'inline-block';
-  }
 }
 
 function copyText(id) {
