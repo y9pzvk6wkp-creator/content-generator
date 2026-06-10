@@ -1,343 +1,512 @@
-<!DOCTYPE html>  
-<html lang="fr">  
-<head>  
-<meta charset="UTF-8" />  
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />  
-<title>ContentAI — Générateur Instagram & TikTok</title>  
-<style>  
-  :root{  
-    --bg:#0f1118;  
-    --card:#0f1724;  
-    --muted:#9aa0b4;  
-    --accent-1:#6366f1;  
-    --accent-2:#8b5cf6;  
-    --accent-3:#ec4899;  
-    --success:#10b981;  
-    --danger:#ef4444;  
-    --glass:#11121a;  
-    --radius:12px;  
-  }  
-  
-  *{box-sizing:border-box;margin:0;padding:0}  
-  html,body{height:100%}  
-  body{  
-    font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;  
-    background: linear-gradient(180deg,#071022 0%, #0f1118 100%);  
-    color:#e6eef8;  
-    -webkit-font-smoothing:antialiased;  
-    -moz-osx-font-smoothing:grayscale;  
-    line-height:1.4;  
-    padding:24px;  
-  }  
-  
-  .header{  
-    max-width:1100px;  
-    margin:0 auto 18px;  
-    padding:18px;  
-    border-radius:16px;  
-    background:linear-gradient(135deg,var(--accent-1),var(--accent-2),var(--accent-3));  
-    box-shadow: 0 6px 30px rgba(11,12,20,0.6);  
-    text-align:center;  
-  }  
-  .header h1{font-size:1.6rem;font-weight:800}  
-  .header p{opacity:0.95;margin-top:6px;font-size:0.95rem;color:rgba(255,255,255,0.92)}  
-  
-  .container{  
-    max-width:1100px;  
-    margin:18px auto;  
-    display:grid;  
-    grid-template-columns: 1fr 360px;  
-    gap:18px;  
-  }  
-  
-  /* Left column */  
-  .main-col{display:flex;flex-direction:column;gap:16px}  
-  
-  .card{  
-    background:linear-gradient(180deg,var(--card), #0b0f1a);  
-    border:1px solid rgba(255,255,255,0.03);  
-    border-radius:var(--radius);  
-    padding:18px;  
-    box-shadow: 0 4px 18px rgba(2,6,23,0.6);  
-  }  
-  h2.card-title{font-size:1rem;margin-bottom:12px;color:#dbe9ff;font-weight:700}  
-  
-  label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:6px}  
-  select, textarea, input[type="text"]{  
-    width:100%;  
-    background:transparent;  
-    border:1px solid rgba(255,255,255,0.05);  
-    padding:10px 12px;  
-    border-radius:10px;  
-    color:inherit;  
-    font-size:0.95rem;  
-    outline:none;  
-  }  
-  select:focus, textarea:focus, input:focus{  
-    box-shadow: 0 0 0 4px rgba(99,102,241,0.08);  
-    border-color:var(--accent-1);  
-  }  
-  textarea{min-height:88px;resize:vertical}  
-  
-  .btn{  
-    display:inline-flex;  
-    align-items:center;  
-    justify-content:center;  
-    gap:8px;  
-    border:0;  
-    cursor:pointer;  
-    padding:12px 14px;  
-    border-radius:12px;  
-    font-weight:700;  
-    transition:transform .12s ease,opacity .12s ease,box-shadow .12s;  
-    user-select:none;  
-  }  
-  .btn:active{transform:translateY(1px)}  
-  .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}  
-  
-  .btn-primary{  
-    background:linear-gradient(90deg,var(--accent-1),var(--accent-2));  
-    color:white;  
-    box-shadow: 0 8px 22px rgba(99,102,241,0.16);  
-  }  
-  .btn-secondary{  
-    background:linear-gradient(90deg,var(--accent-3),#f9737f);  
-    color:white;  
-  }  
-  .btn-ghost{  
-    background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);  
-  }  
-  .copy-btn{background:#111827;color:var(--muted);padding:8px 12px;border-radius:10px;border:0}  
-  
-  .tabs{display:flex;gap:10px}  
-  .tab{  
-    flex:1;padding:10px;border-radius:10px;text-align:center;cursor:pointer;  
-    background:transparent;border:1px solid rgba(255,255,255,0.03);  
-    color:var(--muted);  
-  }  
-  .tab.active{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:white;border-color:transparent;box-shadow:0 6px 20px rgba(99,102,241,0.12)}  
-  .section{display:none}  
-  .section.active{display:block}  
-  
-  .row{display:flex;gap:10px;align-items:center}  
-  .platform-tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}  
-  .platform-tags button{  
-    padding:8px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.04);  
-    background:transparent;color:var(--muted);cursor:pointer;  
-  }  
-  .platform-tags button.selected{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:white;border-color:transparent;box-shadow:0 8px 18px rgba(99,102,241,0.08)}  
-  
-  .result-box{  
-    background:#071427;border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:10px;margin-top:12px;  
-    white-space:pre-wrap;font-size:0.95rem;color:#dff8e1;display:none;line-height:1.55;  
-  }  
-  .result-box.show{display:block}  
-  
-  .spinner{display:none;padding:12px 0;color:var(--accent-2);text-align:center}  
-  .spinner.show{display:block}  
-  
-  /* Right column (paywall / status) */  
-  .side-col{display:flex;flex-direction:column;gap:16px}  
-  .status-bar{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;background:linear-gradient(180deg,#07122a,#081629);border:1px solid rgba(255,255,255,0.03)}  
-  .status-left{display:flex;gap:10px;align-items:center}  
-  .status-dot{width:12px;height:12px;border-radius:50%;background:var(--success)}  
-  .status-dot.free{background:#f59e0b}  
-  .status-text{font-size:0.95rem;color:#cfe0ff}  
-  .status-badge{padding:6px 10px;border-radius:20px;font-weight:700;font-size:0.78rem}  
-  .badge-pro{background:#201f46;color:#cbd5ff}  
-  .badge-trial{background:#3d1b07;color:#ffd966}  
-  
-  .price-box{padding:18px;border-radius:12px;background:linear-gradient(180deg,#061025,#07132a);border:1px solid rgba(255,255,255,0.03)}  
-  .price-amount{font-size:2.2rem;font-weight:900;background:linear-gradient(90deg,var(--accent-1),var(--accent-3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}  
-  .features{margin-top:12px;list-style:none;padding-left:0;color:var(--muted);font-size:0.95rem}  
-  .features li{padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02);display:flex;gap:8px;align-items:center}  
-  .features li:last-child{border-bottom:none}  
-  .trust-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--muted)}  
-  
-  .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:0.9rem;margin-top:8px}  
-  .divider::before,.divider::after{content:"";flex:1;height:1px;background:rgba(255,255,255,0.02)}  
-  
-  .video-options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}  
-  .video-option{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);text-align:center;background:transparent;cursor:pointer}  
-  .video-option.selected{border-color:rgba(139,92,246,0.9);background:linear-gradient(180deg, rgba(139,92,246,0.06), rgba(99,102,241,0.03))}  
-  
-  .runway-box{display:none;padding:12px;margin-top:12px;border-radius:10px;background:#041125;border:1px solid rgba(255,255,255,0.02)}  
-  .runway-box.show{display:block}  
-  
-  .free-uses{padding:12px;text-align:center;border-radius:10px;background:#021427;border:1px solid rgba(255,255,255,0.02)}  
-  .free-count{font-size:1.6rem;font-weight:900;color:#dbe9ff}  
-  
-  /* focus */  
-  :focus{outline:none}  
-  :focus-visible{outline:3px solid rgba(99,102,241,0.12);outline-offset:2px;border-radius:8px}  
-  
-  /* responsive */  
-  @media (max-width:990px){  
-    .container{grid-template-columns:1fr; padding-bottom:60px}  
-    .side-col{order:2}  
-  }  
-</style>  
-</head>  
-<body>  
-  <header class="header" role="banner">  
-    <h1>⚡ ContentAI</h1>  
-    <p>Générateur de contenu IA — Instagram & TikTok</p>  
-  </header>  
-  
-  <main class="container" role="main">  
-    <section class="main-col" aria-live="polite">  
-      <div id="loading-init" class="card" style="text-align:center">  
-        <div style="font-size:2rem;margin-bottom:8px">⏳</div>  
-        <div>Chargement...</div>  
-      </div>  
-  
-      <div id="app-content" style="display:none">  
-        <div class="card" style="padding:12px 12px 16px;">  
-          <div class="tabs" role="tablist" aria-label="Sections">  
-            <button class="tab active" data-tab="text" role="tab" aria-selected="true">✍️ Textes</button>  
-            <button class="tab" data-tab="video" role="tab" aria-selected="false">🎬 Vidéos</button>  
-            <button class="tab" data-tab="strategy" role="tab" aria-selected="false">📊 Stratégie</button>  
-          </div>  
-        </div>  
-  
-        <!-- TEXTES -->  
-        <section id="text-section" class="section active" aria-labelledby="tab-text">  
-          <div class="card">  
-            <h2 class="card-title">✍️ Caption / Texte IA</h2>  
-  
-            <label for="platforms">Plateforme</label>  
-            <div id="platforms" class="platform-tags" role="group" aria-label="Choix de la plateforme">  
-              <button type="button" data-platform="Instagram" class="selected" aria-pressed="true">📸 Instagram</button>  
-              <button type="button" data-platform="TikTok" aria-pressed="false">🎵 TikTok</button>  
-            </div>  
-  
-            <label for="niche">Niche</label>  
-            <select id="niche" name="niche">  
-              <option>Lifestyle</option><option>Business / Motivation</option><option>Humour</option>  
-              <option>Fitness</option><option>Voyage</option><option>Food</option>  
-              <option>Mode / Beauté</option><option>Tech / IA</option><option>Finance</option>  
-            </select>  
-  
-            <label for="ctype">Type de contenu</label>  
-            <select id="ctype" name="ctype">  
-              <option>Caption + hashtags</option><option>Script pour Reel/TikTok</option>  
-              <option>Hook viral</option><option>Bio de profil</option>  
-              <option>Texte pour Story</option><option>Texte pour carrousel</option>  
-            </select>  
-  
-            <label for="topic">Ton sujet</label>  
-            <textarea id="topic" placeholder="Ex: comment gagner de l'argent en dormant..."></textarea>  
-  
-            <label for="tone">Ton</label>  
-            <select id="tone" name="tone">  
-              <option>Inspirant / Motivant</option><option>Drôle / Décalé</option>  
-              <option>Éducatif</option><option>Storytelling</option><option>Direct / Punchy</option>  
-            </select>  
-  
-            <div style="margin-top:12px;display:flex;gap:10px">  
-              <button id="gen-text-btn" class="btn btn-primary">⚡ Générer</button>  
-              <button id="clear-text-btn" class="btn btn-ghost">Effacer</button>  
-            </div>  
-  
-            <div id="ts" class="spinner">🤖 Génération en cours...</div>  
-            <div id="tr" class="result-box" aria-live="polite"></div>  
-            <div style="margin-top:8px">  
-              <button id="tc" class="copy-btn" style="display:none">📋 Copier</button>  
-            </div>  
-          </div>  
-  
-          <div class="card">  
-            <h2 class="card-title">💡 Idées en masse</h2>  
-            <label for="in2">Niche</label>  
-            <select id="in2">  
-              <option>Lifestyle</option><option>Business</option><option>Fitness</option>  
-              <option>Voyage</option><option>Finance</option><option>Tech / IA</option>  
-            </select>  
-  
-            <label for="ic">Nombre</label>  
-            <select id="ic">  
-              <option>10 idées</option><option>20 idées</option><option>30 idées</option>  
-            </select>  
-  
-            <div style="margin-top:12px;display:flex;gap:10px">  
-              <button id="gen-ideas-btn" class="btn btn-primary">💡 Générer des idées</button>  
-              <button id="clear-ideas-btn" class="btn btn-ghost">Effacer</button>  
-            </div>  
-  
-            <div id="is" class="spinner">🤖 Génération en cours...</div>  
-            <div id="ir" class="result-box" aria-live="polite"></div>  
-            <div style="margin-top:8px">  
-              <button id="irc" class="copy-btn" style="display:none">📋 Copier</button>  
-            </div>  
-          </div>  
-        </section>  
-  
-        <!-- VIDEOS -->  
-        <section id="video-section" class="section" aria-labelledby="tab-video">  
-          <div class="card">  
-            <h2 class="card-title">🎬 Prompt Vidéo IA</h2>  
-            <p style="color:var(--muted);font-size:0.9rem;margin-bottom:8px">Je génère un prompt optimisé pour Runway ML, puis je t'explique comment créer ta vidéo.</p>  
-  
-            <div class="video-options" role="list">  
-              <button type="button" class="video-option selected" data-vtype="reel" aria-pressed="true">📱<div style="font-weight:700;margin-top:6px">Reel/TikTok</div><div style="font-size:0.78rem;color:var(--muted)">Vertical 9:16</div></button>  
-              <button type="button" class="video-option" data-vtype="cine" aria-pressed="false">🎥<div style="font-weight:700;margin-top:6px">Cinématique</div><div style="font-size:0.78rem;color:var(--muted)">Style film</div></button>  
-              <button type="button" class="video-option" data-vtype="product" aria-pressed="false">🛍️<div style="font-weight:700;margin-top:6px">Produit</div><div style="font-size:0.78rem;color:var(--muted)">Showcase</div></button>  
-              <button type="button" class="video-option" data-vtype="nature" aria-pressed="false">🌿<div style="font-weight:700;margin-top:6px">Nature</div><div style="font-size:0.78rem;color:var(--muted)">Ambiance</div></button>  
-            </div>  
-  
-            <label for="vdesc">Description</label>  
-            <textarea id="vdesc" placeholder="Ex: femme marchant à Paris au coucher de soleil..."></textarea>  
-  
-            <label for="vstyle">Style visuel</label>  
-            <select id="vstyle">  
-              <option>Cinématique / Film</option><option>Aesthetic / Pastel</option>  
-              <option>Dark Luxury</option><option>Minimaliste</option>  
-              <option>Énergique</option><option>Onirique</option>  
-            </select>  
-  
-            <div style="margin-top:12px;display:flex;gap:10px">  
-              <button id="gen-video-btn" class="btn btn-secondary">🎬 Générer le prompt</button>  
-              <button id="clear-video-btn" class="btn btn-ghost">Effacer</button>  
-            </div>  
-  
-            <div id="vs" class="spinner">🤖 Génération...</div>  
-            <div id="vpr" class="prompt-generated result-box" aria-live="polite"></div>  
-            <div style="margin-top:8px">  
-              <button id="vpc" class="copy-btn" style="display:none">📋 Copier le prompt</button>  
-            </div>  
-  
-            <div id="runway-box" class="runway-box">  
-              <h3 style="color:#60a5fa;margin-bottom:8px">🚀 Comment créer ta vidéo sur Runway ML</h3>  
-              <ol style="padding-left:16px;color:var(--muted)">  
-                <li>Va sur runwayml.com et crée un compte</li>  
-                <li>Clique sur "Gen-4" → Text to Video</li>  
-                <li>Colle le prompt généré ci-dessus</li>  
-                <li>Sélectionne le ratio 9:16</li>  
-                <li>Clique "Generate" → attends 1-2 min</li>  
-                <li>Télécharge et poste !</li>  
-              </ol>  
-              <p style="font-size:0.86rem;color:#60a5fa;margin-top:6px">Alternatives gratuites : Kling AI · Pika Labs</p>  
-            </div>  
-          </div>  
-        </section>  
-  
-        <!-- STRATEGY -->  
-        <section id="strategy-section" class="section" aria-labelledby="tab-strategy">  
-          <div class="card">  
-            <h2 class="card-title">📊 Stratégie personnalisée</h2>  
-  
-            <label for="sn">Niche</label>  
-            <select id="sn">  
-              <option>Lifestyle</option><option>Business</option><option>Fitness</option>  
-              <option>Voyage</option><option>Food</option><option>Finance</option><option>Tech / IA</option>  
-            </select>  
-  
-            <label for="sg">Objectif</label>  
-            <select id="sg">  
-              <option>Gagner des abonnés</option><option>Maximiser l'engagement</option>  
-              <option>Monétiser</option><option>Marque personnelle</option>  
-            </select>  
-  
-            <label for="sl">Abonnés actuels</label>  
-            <select id="sl">  
-              <option>0 — je débute</option>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContentAI — Générateur Instagram & TikTok</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: #fff; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #6366f1, #8b5cf6, #ec4899); padding: 20px; text-align: center; }
+  .header h1 { font-size: 1.8em; font-weight: 800; }
+  .header p { opacity: 0.85; margin-top: 5px; font-size: 0.9em; }
+  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  label { display: block; font-size: 0.85em; color: #a0a0c0; margin-bottom: 6px; margin-top: 14px; }
+  select, textarea { width: 100%; background: #0f0f1a; border: 1px solid #3d3d5e; border-radius: 10px; padding: 12px; color: #fff; font-size: 0.95em; outline: none; font-family: inherit; }
+  select:focus, textarea:focus { border-color: #6366f1; }
+  textarea { resize: vertical; min-height: 80px; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1em; font-weight: 700; cursor: pointer; margin-top: 16px; transition: all 0.2s; font-family: inherit; }
+  .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-stripe { background: linear-gradient(135deg, #635bff, #4f46e5); color: #fff; font-size: 1.1em; }
+  .btn-stripe:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-secondary { background: linear-gradient(135deg, #ec4899, #f43f5e); color: #fff; }
+  .btn-danger { background: #1a1a2e; border: 1px solid #dc2626; color: #f87171; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 12px; text-align: center; border-radius: 10px; border: 1px solid #2d2d4e; background: #1a1a2e; cursor: pointer; font-size: 0.9em; transition: all 0.2s; }
+  .tab.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-color: transparent; }
+  .section { display: none; } .section.active { display: block; }
+  .result-box { background: #0f0f1a; border: 1px solid #3d3d5e; border-radius: 10px; padding: 16px; margin-top: 16px; white-space: pre-wrap; line-height: 1.6; font-size: 0.95em; display: none; }
+  .result-box.show { display: block; }
+  .copy-btn { background: #2d2d4e; border: none; color: #a0a0c0; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8em; margin-top: 10px; font-family: inherit; }
+  .spinner { display: none; text-align: center; padding: 20px; color: #8b5cf6; }
+  .spinner.show { display: block; }
+
+  /* PAYWALL */
+  #paywall { display: none; text-align: center; padding: 20px 0; }
+  .price-box { background: linear-gradient(135deg, #1a1a2e, #2d2d4e); border: 2px solid #6366f1; border-radius: 20px; padding: 32px 24px; margin-bottom: 20px; }
+  .price-amount { font-size: 3em; font-weight: 900; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .price-period { font-size: 1em; color: #a0a0c0; margin-top: 4px; }
+  .features { list-style: none; margin: 24px 0; text-align: left; }
+  .features li { padding: 8px 0; border-bottom: 1px solid #2d2d4e; font-size: 0.95em; display: flex; align-items: center; gap: 10px; }
+  .features li:last-child { border-bottom: none; }
+  .features .check { color: #10b981; font-size: 1.2em; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: #4b5563; font-size: 0.85em; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #2d2d4e; }
+  .trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .trust-badge { font-size: 0.75em; color: #6b7280; display: flex; align-items: center; gap: 5px; }
+
+  /* STATUS BAR */
+  .status-bar { background: #1a1a2e; border: 1px solid #2d2d4e; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+  .status-dot.free { background: #f59e0b; }
+  .status-text { font-size: 0.9em; }
+  .status-badge { font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: 700; }
+  .badge-pro { background: #312e81; color: #a5b4fc; }
+  .badge-trial { background: #451a03; color: #fbbf24; }
+  .usage-bar { height: 4px; background: #2d2d4e; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .usage-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 2px; transition: width 0.3s; }
+
+  /* FREE TRIAL COUNTER */
+  .free-uses { text-align: center; background: #0a1628; border: 1px solid #1e3a5f; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .free-uses p { font-size: 0.85em; color: #60a5fa; }
+  .free-count { font-size: 1.8em; font-weight: 900; color: #fff; }
+
+  .platform-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .tag { padding: 6px 14px; border-radius: 20px; border: 1px solid #3d3d5e; font-size: 0.8em; cursor: pointer; transition: all 0.2s; }
+  .tag.selected { background: #6366f1; border-color: #6366f1; }
+
+  .video-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .video-option { background: #0f0f1a; border: 2px solid #2d2d4e; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .video-option:hover, .video-option.selected { border-color: #8b5cf6; background: #1a0f2e; }
+
+  .runway-box { background: #0a1628; border: 1px solid #1e3a5f; border-radius: 12px; padding: 20px; margin-top: 16px; display: none; }
+  .runway-box.show { display: block; }
+  .step-list { list-style: none; }
+  .step-list li { padding: 8px 0; border-bottom: 1px solid #1e3a5f; font-size: 0.9em; display: flex; align-items: flex-start; gap: 10px; }
+  .step-list li:last-child { border-bottom: none; }
+  .step-num { background: #1e40af; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.75em; flex-shrink: 0; margin-top: 1px; }
+  .prompt-generated { background: #0f1f0f; border: 1px solid #166534; border-radius: 10px; padding: 14px; margin-top: 12px; font-size: 0.9em; color: #86efac; display: none; }
+  .prompt-generated.show { display: block; }
+
+  .loading-init { text-align: center; padding: 60px 20px; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ ContentAI</h1>
+  <p>Générateur de contenu IA — Instagram & TikTok</p>
+</div>
+
+<div class="container">
+
+  <!-- LOADING INITIAL -->
+  <div class="loading-init" id="loading-init">
+    <div style="font-size:2em;margin-bottom:10px">⏳</div>
+    <div>Chargement...</div>
+  </div>
+
+  <!-- STATUS BAR (visible une fois connecté) -->
+  <div class="status-bar" id="status-bar" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="status-dot" id="status-dot"></div>
+      <div>
+        <div class="status-text" id="status-text"></div>
+        <div id="usage-wrap" style="display:none">
+          <div style="font-size:0.75em;color:#6b7280" id="usage-label"></div>
+          <div class="usage-bar"><div class="usage-fill" id="usage-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="status-badge badge-pro" id="plan-badge">PRO</span>
+      <button id="cancel-btn" class="btn-danger" style="display:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.8em;background:#1a1a2e;border:1px solid #dc2626;color:#f87171" onclick="cancelSubscription()">Résilier</button>
+    </div>
+  </div>
+
+  <!-- PAYWALL -->
+  <div id="paywall">
+    <div class="free-uses" id="trial-counter">
+      <p>Essai gratuit</p>
+      <div class="free-count" id="free-count">3</div>
+      <p>générations restantes — sans carte bancaire</p>
+    </div>
+
+    <div class="price-box">
+      <div style="margin-bottom:8px">✨ ContentAI Pro</div>
+      <div class="price-amount">9.99€</div>
+      <div class="price-period">par mois · résiliable à tout moment</div>
+      <ul class="features">
+        <li><span class="check">✓</span> Générations de textes illimitées</li>
+        <li><span class="check">✓</span> Prompts vidéo IA illimités</li>
+        <li><span class="check">✓</span> Stratégies personnalisées illimitées</li>
+        <li><span class="check">✓</span> Tous les types de contenu</li>
+        <li><span class="check">✓</span> Accès prioritaire aux nouvelles fonctionnalités</li>
+        <li><span class="check">✓</span> Support prioritaire</li>
+      </ul>
+      <button class="btn btn-stripe" id="checkout-btn" onclick="startCheckout()">
+        💳 S'abonner pour 9.99€/mois
+      </button>
+      <div class="trust-badges">
+        <div class="trust-badge">🔒 Paiement sécurisé Stripe</div>
+        <div class="trust-badge">🔄 Résiliable à tout moment</div>
+        <div class="trust-badge">🇪🇺 Conforme RGPD</div>
+      </div>
+    </div>
+
+    <div class="divider">ou continue avec l'essai gratuit</div>
+    <p style="font-size:0.85em;color:#6b7280"><strong id="free-count-2">3</strong> générations gratuites disponibles sans compte.</p>
+  </div>
+
+  <!-- APP (accessible free + pro) -->
+  <div id="app-content" style="display:none">
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('text')">✍️ Textes</div>
+      <div class="tab" onclick="switchTab('video')">🎬 Vidéos</div>
+      <div class="tab" onclick="switchTab('strategy')">📊 Stratégie</div>
+    </div>
+
+    <!-- TEXTES -->
+    <div id="text-section" class="section active">
+      <div class="card">
+        <h2 style="font-size:1em;margin-bottom:16px">✍️ Caption / Texte IA</h2>
+        <label>Plateforme</label>
+        <div class="platform-tags">
+          <div class="tag selected" onclick="this.classList.toggle('selected')">📸 Instagram</div>
+          <div class="tag" onclick="this.classList.toggle('selected')">🎵 TikTok</div>
+        </div>
+        <label>Niche</label>
+        <select id="niche">
+          <option>Lifestyle</option><option>Business / Motivation</option><option>Humour</option>
+          <option>Fitness</option><option>Voyage</option><option>Food</option>
+          <option>Mode / Beauté</option><option>Tech / IA</option><option>Finance</option>
+        </select>
+        <label>Type de contenu</label>
+        <select id="ctype">
+          <option>Caption + hashtags</option><option>Script pour Reel/TikTok</option>
+          <option>Hook viral</option><option>Bio de profil</option>
+          <option>Texte pour Story</option><option>Texte pour carrousel</option>
+        </select>
+        <label>Ton sujet</label>
+        <textarea id="topic" placeholder="Ex: comment gagner de l'argent en dormant..."></textarea>
+        <label>Ton</label>
+        <select id="tone">
+          <option>Inspirant / Motivant</option><option>Drôle / Décalé</option>
+          <option>Éducatif</option><option>Storytelling</option><option>Direct / Punchy</option>
+        </select>
+        <button class="btn btn-primary" onclick="generateText()">⚡ Générer</button>
+        <div class="spinner" id="ts">🤖 Génération en cours...</div>
+        <div class="result-box" id="tr"></div>
+        <button class="copy-btn" id="tc" style="display:none" onclick="copyText('tr')">📋 Copier</button>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:1em;margin-bottom:16px">💡 Idées en masse</h2>
+        <label>Niche</label>
+        <select id="in2">
+          <option>Lifestyle</option><option>Business</option><option>Fitness</option>
+          <option>Voyage</option><option>Finance</option><option>Tech / IA</option>
+        </select>
+        <label>Nombre</label>
+        <select id="ic"><option>10 idées</option><option>20 idées</option><option>30 idées</option></select>
+        <button class="btn btn-primary" onclick="generateIdeas()">💡 Générer des idées</button>
+        <div class="spinner" id="is">🤖 Génération en cours...</div>
+        <div class="result-box" id="ir"></div>
+        <button class="copy-btn" id="irc" style="display:none" onclick="copyText('ir')">📋 Copier</button>
+      </div>
+    </div>
+
+    <!-- VIDÉOS -->
+    <div id="video-section" class="section">
+      <div class="card">
+        <h2 style="font-size:1em;margin-bottom:12px">🎬 Prompt Vidéo IA</h2>
+        <p style="font-size:0.85em;color:#a0a0c0;margin-bottom:12px">Je génère un prompt optimisé pour Runway ML, puis je t'explique comment créer ta vidéo.</p>
+        <div class="video-options">
+          <div class="video-option selected" onclick="selectVid(this,'reel')">
+            <div style="font-size:1.5em">📱</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Reel/TikTok</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Vertical 9:16</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'cine')">
+            <div style="font-size:1.5em">🎥</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Cinématique</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Style film</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'product')">
+            <div style="font-size:1.5em">🛍️</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Produit</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Showcase</div>
+          </div>
+          <div class="video-option" onclick="selectVid(this,'nature')">
+            <div style="font-size:1.5em">🌿</div>
+            <div style="font-weight:700;font-size:0.85em;margin-top:4px">Nature</div>
+            <div style="font-size:0.75em;color:#a0a0c0">Ambiance</div>
+          </div>
+        </div>
+        <label>Description</label>
+        <textarea id="vdesc" placeholder="Ex: femme marchant à Paris au coucher de soleil..."></textarea>
+        <label>Style visuel</label>
+        <select id="vstyle">
+          <option>Cinématique / Film</option><option>Aesthetic / Pastel</option>
+          <option>Dark Luxury</option><option>Minimaliste</option>
+          <option>Énergique</option><option>Onirique</option>
+        </select>
+        <button class="btn btn-secondary" onclick="generateVideoPrompt()">🎬 Générer le prompt</button>
+        <div class="spinner" id="vs">🤖 Génération...</div>
+        <div class="prompt-generated" id="vpr"></div>
+        <button class="copy-btn" id="vpc" style="display:none" onclick="copyText('vpr')">📋 Copier le prompt</button>
+      </div>
+
+      <div class="runway-box" id="runway-box">
+        <h3 style="color:#60a5fa;margin-bottom:12px">🚀 Comment créer ta vidéo sur Runway ML</h3>
+        <ul class="step-list">
+          <li><span class="step-num">1</span>Va sur runwayml.com et crée un compte</li>
+          <li><span class="step-num">2</span>Clique sur "Gen-4" → Text to Video</li>
+          <li><span class="step-num">3</span>Colle le prompt généré ci-dessus</li>
+          <li><span class="step-num">4</span>Sélectionne le ratio 9:16</li>
+          <li><span class="step-num">5</span>Clique "Generate" → attends 1-2 min</li>
+          <li><span class="step-num">6</span>Télécharge et poste !</li>
+        </ul>
+        <p style="font-size:0.8em;color:#60a5fa;margin-top:10px">Alternatives gratuites : Kling AI · Pika Labs</p>
+      </div>
+    </div>
+
+    <!-- STRATÉGIE -->
+    <div id="strategy-section" class="section">
+      <div class="card">
+        <h2 style="font-size:1em;margin-bottom:16px">📊 Stratégie personnalisée</h2>
+        <label>Niche</label>
+        <select id="sn">
+          <option>Lifestyle</option><option>Business</option><option>Fitness</option>
+          <option>Voyage</option><option>Food</option><option>Finance</option><option>Tech / IA</option>
+        </select>
+        <label>Objectif</label>
+        <select id="sg">
+          <option>Gagner des abonnés</option><option>Maximiser l'engagement</option>
+          <option>Monétiser</option><option>Marque personnelle</option>
+        </select>
+        <label>Abonnés actuels</label>
+        <select id="sl">
+          <option>0 — je débute</option><option>Moins de 1 000</option>
+          <option>1 000 — 10 000</option><option>10 000 — 50 000</option><option>Plus de 50 000</option>
+        </select>
+        <button class="btn btn-primary" onclick="generateStrategy()">📊 Générer ma stratégie</button>
+        <div class="spinner" id="ss">🤖 Analyse en cours...</div>
+        <div class="result-box" id="sr"></div>
+        <button class="copy-btn" id="sc" style="display:none" onclick="copyText('sr')">📋 Copier</button>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+
+</div><!-- /container -->
+
+<script>
+// ─── Config ──────────────────────────────────────────────────────────────────
+const API = ''; // Vide = même origine. En dev mets 'http://localhost:3000'
+
+// ─── Session (persistée dans localStorage pour ne pas perdre le statut Pro) ──
+let sessionId = localStorage.getItem('sessionId');
+if (!sessionId) {
+  sessionId = crypto.randomUUID();
+  localStorage.setItem('sessionId', sessionId);
+}
+
+let state = { isPro: false, freeUsesLeft: 3, freeLimit: 3 };
+let selectedVidType = 'reel';
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  await checkUrlParams();
+  await fetchStatus();
+  renderUI();
+  document.getElementById('loading-init').style.display = 'none';
+}
+
+async function fetchStatus() {
+  try {
+    const r = await apiFetch('/api/status');
+    if (r) state = r;
+  } catch (_) {}
+}
+
+async function checkUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('success') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    // Statut mis à jour via webhook côté serveur, on attend un peu
+    await new Promise(r => setTimeout(r, 1500));
+    await fetchStatus();
+    if (state.isPro) alert('🎉 Bienvenue sur ContentAI Pro ! Ton abonnement est actif.');
+  }
+  if (p.get('canceled') === 'true') {
+    window.history.replaceState({}, '', window.location.pathname);
+    alert('Paiement annulé. Tu peux réessayer quand tu veux !');
+  }
+}
+
+function renderUI() {
+  if (state.isPro) {
+    document.getElementById('paywall').style.display = 'none';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'flex';
+    document.getElementById('status-dot').style.background = '#10b981';
+    document.getElementById('status-text').textContent = 'Abonné Pro — accès illimité';
+    document.getElementById('plan-badge').className = 'status-badge badge-pro';
+    document.getElementById('plan-badge').textContent = 'PRO';
+    document.getElementById('usage-wrap').style.display = 'none';
+    document.getElementById('cancel-btn').style.display = 'inline-block';
+  } else if (state.freeUsesLeft > 0) {
+    // Essai gratuit avec générations restantes
+    document.getElementById('paywall').style.display = 'block';
+    document.getElementById('app-content').style.display = 'block';
+    document.getElementById('status-bar').style.display = 'flex';
+    document.getElementById('status-dot').className = 'status-dot free';
+    document.getElementById('status-text').textContent = `Essai gratuit — ${state.freeUsesLeft} génération(s) restante(s)`;
+    document.getElementById('plan-badge').className = 'status-badge badge-trial';
+    document.getElementById('plan-badge').textContent = 'GRATUIT';
+    const pct = ((state.freeLimit - state.freeUsesLeft) / state.freeLimit) * 100;
+    document.getElementById('usage-wrap').style.display = 'block';
+    document.getElementById('usage-label').textContent = `${state.freeLimit - state.freeUsesLeft}/${state.freeLimit} utilisées`;
+    document.getElementById('usage-fill').style.width = pct + '%';
+    document.getElementById('free-count').textContent = state.freeUsesLeft;
+    document.getElementById('free-count-2').textContent = state.freeUsesLeft;
+  } else {
+    // Plus de générations → paywall uniquement
+    document.getElementById('paywall').style.display = 'block';
+    document.getElementById('app-content').style.display = 'none';
+    document.getElementById('status-bar').style.display = 'none';
+    document.getElementById('trial-counter').style.display = 'none';
+  }
+}
+
+// ─── API helper ──────────────────────────────────────────────────────────────
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-session-id': sessionId,
+      ...(options.headers ?? {}),
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return data;
+}
+
+// ─── Génération ──────────────────────────────────────────────────────────────
+async function generate(prompt) {
+  try {
+    const data = await apiFetch('/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ prompt }),
+    });
+    // Mettre à jour le compteur après chaque appel
+    state.freeUsesLeft = data.freeUsesLeft;
+    state.isPro        = data.isPro;
+    renderUI();
+    return data.text;
+  } catch (err) {
+    if (err.error === 'LIMIT_REACHED') {
+      alert('Tu as utilisé tes générations gratuites ! Abonne-toi pour continuer.');
+      document.getElementById('paywall').scrollIntoView({ behavior: 'smooth' });
+    } else {
+      alert(err.error ?? 'Erreur — réessaie.');
+    }
+    return null;
+  }
+}
+
+// ─── Checkout ────────────────────────────────────────────────────────────────
+async function startCheckout() {
+  const btn = document.getElementById('checkout-btn');
+  btn.textContent = '⏳ Redirection vers Stripe...';
+  btn.disabled = true;
+  try {
+    const data = await apiFetch('/api/checkout', { method: 'POST' });
+    window.location.href = data.url;
+  } catch (_) {
+    alert('Erreur paiement. Réessaie.');
+    btn.textContent = '💳 S\'abonner pour 9.99€/mois';
+    btn.disabled = false;
+  }
+}
+
+async function cancelSubscription() {
+  if (!confirm('Résilier ton abonnement Pro ? Tu garderas l\'accès jusqu\'à la fin de la période.')) return;
+  try {
+    await apiFetch('/api/cancel', { method: 'POST' });
+    alert('Abonnement résilié. Merci d\'avoir utilisé ContentAI !');
+    state.isPro = false;
+    await fetchStatus();
+    renderUI();
+  } catch (err) {
+    alert(err.error ?? 'Erreur annulation.');
+  }
+}
+
+// ─── Générateurs de contenu ──────────────────────────────────────────────────
+async function generateText() {
+  const platforms = [...document.querySelectorAll('.tag.selected')].map(t => t.textContent).join(' et ');
+  const prompt = `Tu es expert en contenu pour réseaux sociaux. Génère un ${document.getElementById('ctype').value} pour ${platforms || 'Instagram'} dans la niche ${document.getElementById('niche').value}.\nSujet: ${document.getElementById('topic').value || 'au choix dans la niche'}\nTon: ${document.getElementById('tone').value}\nInclus hashtags optimisés si Instagram. Hook percutant si TikTok. Sois créatif et engageant.`;
+  await runAndShow('ts', 'tr', 'tc', prompt);
+}
+
+async function generateIdeas() {
+  const prompt = `Génère ${document.getElementById('ic').value} idées de posts viraux pour Instagram et TikTok dans la niche ${document.getElementById('in2').value}. Format numéroté : titre, type de contenu, pourquoi ça va cartonner. Sois concret et créatif.`;
+  await runAndShow('is', 'ir', 'irc', prompt);
+}
+
+async function generateVideoPrompt() {
+  const prompt = `Tu es expert en génération vidéo IA Runway ML. Génère un prompt optimisé en anglais pour une vidéo "${selectedVidType}" style ${document.getElementById('vstyle').value}.\nDescription: ${document.getElementById('vdesc').value || 'vidéo esthétique engageante pour réseaux sociaux'}\nInclure: scène, éclairage, mouvements caméra, atmosphère, style cinématique. Max 150 mots. Réponds UNIQUEMENT avec le prompt.`;
+  document.getElementById('vs').classList.add('show');
+  document.getElementById('vpr').classList.remove('show');
+  document.getElementById('vpc').style.display = 'none';
+  document.getElementById('runway-box').classList.remove('show');
+  const txt = await generate(prompt);
+  document.getElementById('vs').classList.remove('show');
+  if (txt) {
+    document.getElementById('vpr').textContent = txt;
+    document.getElementById('vpr').classList.add('show');
+    document.getElementById('vpc').style.display = 'inline-block';
+    document.getElementById('runway-box').classList.add('show');
+  }
+}
+
+async function generateStrategy() {
+  const prompt = `Tu es expert en growth hacking Instagram et TikTok. Crée une stratégie de contenu détaillée pour quelqu'un dans la niche ${document.getElementById('sn').value} avec l'objectif : ${document.getElementById('sg').value}, niveau actuel : ${document.getElementById('sl').value}.\nInclus : 1) Fréquence de publication 2) Types de contenus (%) 3) Meilleurs horaires 4) 5 idées virales spécifiques 5) Stratégie hashtags 6) Plan d'action 30 jours. Très concret et actionnable.`;
+  await runAndShow('ss', 'sr', 'sc', prompt);
+}
+
+async function runAndShow(spinnerId, resultId, btnId, prompt) {
+  document.getElementById(spinnerId).classList.add('show');
+  document.getElementById(resultId).classList.remove('show');
+  document.getElementById(btnId).style.display = 'none';
+  const txt = await generate(prompt);
+  document.getElementById(spinnerId).classList.remove('show');
+  if (txt) {
+    document.getElementById(resultId).textContent = txt;
+    document.getElementById(resultId).classList.add('show');
+    document.getElementById(btnId).style.display = 'inline-block';
+  }
+}
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) =>
+    t.classList.toggle('active', ['text','video','strategy'][i] === tab)
+  );
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(tab + '-section').classList.add('active');
+}
+
+function selectVid(el, type) {
+  document.querySelectorAll('.video-option').forEach(v => v.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedVidType = type;
+}
+
+function copyText(id) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent)
+    .then(() => alert('✅ Copié !'));
+}
+
+init();
+</script>
+</body>
+</html>
